@@ -1,5 +1,7 @@
 CC = cc
-CFlags = -Wall
+
+ServerCFlags = -Wall -lpthread
+ClientCFlags = -Wall
 
 SourcesDir = src/
 IncludesDir = include/
@@ -11,7 +13,7 @@ ServerDir = server/
 ServerSourcesDir = $(addprefix $(ServerDir), $(SourcesDir))
 ServerObjectsDir = $(addprefix $(ServerDir), $(ObjectsDir))
 ServerTmpDir = $(addprefix $(ServerDir), $(TmpDir))
-ServerSources = server.c
+ServerSources = server.c controller.c
 ServerObjects = $(ServerSources:.c=.o)
 ServerCObjects = $(addprefix $(ServerObjectsDir), $(ServerObjects))
 ServerExecutable = server
@@ -32,10 +34,10 @@ all: $(ServerExecutable) $(ClientExecutable)
 $(ServerExecutable): $(ServerCExecutable)
 
 $(ServerCExecutable): $(ServerCObjects) .bin_dir
-	$(CC) $(CFlags) $(ServerCObjects) -o $@
+	$(CC) $(ServerCFlags) $(ServerCObjects) -o $@
 
 $(ServerObjectsDir)%.o: $(ServerSourcesDir)%.c .server_object_dir
-	$(CC) $(CFlags) $< -c -o $@
+	$(CC) $(ServerCFlags) $< -c -o $@
 
 .server_object_dir:
 	mkdir -p $(ServerObjectsDir)
@@ -43,10 +45,10 @@ $(ServerObjectsDir)%.o: $(ServerSourcesDir)%.c .server_object_dir
 $(ClientExecutable): $(ClientCExecutable)
 
 $(ClientCExecutable): $(ClientCObjects) .bin_dir
-	$(CC) $(CFlags) $(ClientCObjects) -o $@
+	$(CC) $(ClientCFlags) $(ClientCObjects) -o $@
 
 $(ClientObjectsDir)%.o: $(ClientSourcesDir)%.c .client_object_dir
-	$(CC) $(CFlags) $< -c -o $@
+	$(CC) $(ClientCFlags) $< -c -o $@
 
 .client_object_dir:
 	mkdir -p $(ClientObjectsDir)
