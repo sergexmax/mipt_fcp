@@ -3,9 +3,10 @@
 
 /* Structure of control thread function arguments. */
 typedef struct {
+        int msgid;
 } ControlArgs;
 
-/* Control thread function. */
+/* The control thread function. */
 void *
 control(void *args_void);
 

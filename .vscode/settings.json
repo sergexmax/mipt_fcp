@@ -1,6 +1,17 @@
 {
     "files.associations": {
         "stdio.h": "c",
-        "stdlib.h": "c"
-    }
+        "stdlib.h": "c",
+        "errno.h": "c",
+        "controller.h": "c",
+        "stat.h": "c"
+    },
+    "cSpell.words": [
+        "EPOLLIN",
+        "MIPT",
+        "addprefix",
+        "lpthread",
+        "mkdir",
+        "vgcore"
+    ]
 }
