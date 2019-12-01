@@ -10,7 +10,7 @@
 #define ANSI_COLOR_CYAN "\x1b[36m"
 #define ANSI_COLOR_RESET "\x1b[0m"
 
-/* Print the error message. */
+/* Print error. */
 #define EPRINTF(command)                                                              \
         { fprintf(stderr,                                                             \
                 ANSI_COLOR_RED "File: " ANSI_COLOR_RESET "%s\n"                       \
@@ -20,6 +20,9 @@
                 __FILE__, __func__, __LINE__, strerror(errno));                       \
         exit(errno); }
 
-#define FIFO_ATOMIC_BLOCK_SIZE 1024
+#define COMMUNICATION_FIFO_PATH "./tmp/communication.fifo"
+#define CLIENT_FIFO_PREPATH "./tmp/"
+
+static const size_t FIFO_ATOMIC_BLOCK_SIZE = 1024 * sizeof(char);
 
 #endif /* _MIPT_FCP_LIB_H */

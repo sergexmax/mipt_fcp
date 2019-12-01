@@ -6,7 +6,7 @@ typedef struct {
         int msgid;
 } ControlArgs;
 
-/* The control thread function. */
+/* Control thread function. */
 void *
 control(void *args_void);
 

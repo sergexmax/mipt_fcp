@@ -27,7 +27,7 @@ typedef struct {
         SharedMemory *shared_memory;
 } CommunicationArgs;
 
-/* The communication thread function. */
+/* Communication thread function. */
 void *
 communicate(void *args_void);
 

@@ -26,38 +26,47 @@ main(int argc, char *argv[], char *envp[])
         pthread_t controller;
         int control_fifo_fd_read;
         int communication_fifo_fd_read;
+        int communication_fifo_fd_write;
         int epoll_fd;
         struct epoll_event control_epoll_event;
         struct epoll_event communication_epoll_event;
         struct epoll_event epoll_events[EPOLL_NEVENTS_MAX];
-        int nthreads = NTHREADS_DEF; /* A number of communication threads. */
+        int nthreads = NTHREADS_DEF; /* Number of communication threads. */
         pthread_mutex_t mutex;
         EpollArgs epoll_args;
         SharedMemory shared_memory;
         CommunicationArgs communication_args[NTHREADS_MAX];
         pthread_t communicators[NTHREADS_MAX];
 
+        /* Create message queue. */
         if ((msgid = msgget(IPC_PRIVATE, IPC_CREAT | 0666)) < 0)
                 EPRINTF("msgget");
 
+        /* Launch control process. */
         control_args = (ControlArgs){msgid};
         if (pthread_create(&controller, NULL, control, &control_args))
                 EPRINTF("pthread_create");
 
+        /* Wait for message from control process. */
         if (msgrcv(msgid, &msgbuf, 0, 1, 0) < 0)
                 EPRINTF("msgrcv");
 
+        /* Open controller fifo for reading. */
         control_fifo_fd_read = open(CONTROL_FIFO_PATH, O_RDONLY | O_NONBLOCK);
         if (control_fifo_fd_read < 0)
                 EPRINTF("open");
 
+        /* Create communication fifo. */
         if (unlink(COMMUNICATION_FIFO_PATH) && errno != ENOENT)
                 EPRINTF("unlink");
         if (mkfifo(COMMUNICATION_FIFO_PATH, 0666))
                 EPRINTF("mkfifo");
 
+        /* Open communication fifo for reading (and writing for correct epoll work). */
         communication_fifo_fd_read = open(COMMUNICATION_FIFO_PATH, O_RDONLY | O_NONBLOCK);
+        communication_fifo_fd_write = open(COMMUNICATION_FIFO_PATH, O_WRONLY);
 
+        /* Create epoll and epoll things. */
         epoll_fd = epoll_create1(0);
         if (epoll_fd < 0)
                 EPRINTF("epoll_create1");
@@ -74,7 +83,8 @@ main(int argc, char *argv[], char *envp[])
 
         pthread_mutex_init(&mutex, NULL);
 
-        epoll_args = (EpollArgs){epoll_fd, epoll_events, -1}; /* The last one is the epoll timeout, */
+        /* Launch communication processes. */
+        epoll_args = (EpollArgs){epoll_fd, epoll_events, -1}; /* The last one is epoll timeout, */
         shared_memory = (SharedMemory){control_fifo_fd_read, communication_fifo_fd_read, &epoll_args, true, &mutex};
         for (int i = 0; i < nthreads; ++i) {
                 communication_args[i] = (CommunicationArgs){i + 1, &shared_memory};
@@ -91,6 +101,8 @@ main(int argc, char *argv[], char *envp[])
         if (pthread_mutex_destroy(&mutex))
                 EPRINTF("pthread_mutex_destroy");
         if (close(epoll_fd))
+                EPRINTF("close");
+        if (close(communication_fifo_fd_write))
                 EPRINTF("close");
         if (close(communication_fifo_fd_read))
                 EPRINTF("close");

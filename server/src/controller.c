@@ -14,8 +14,8 @@
 #include "../../include/lib.h"
 #include "../include/lib.h"
 
-static const int FORMAT_MAX_LENGTH = COMMAND_MAX_LENGTH + 2; /* The length of the decimal record does not exceed
-                                                              * the number itself. */
+static const int FORMAT_MAX_LENGTH = COMMAND_MAX_LENGTH + 2; /* Length of decimal record does not exceed
+                                                              * number itself. */
 
 void *
 control(void *args_void)
@@ -29,6 +29,7 @@ control(void *args_void)
 
         args = (ControlArgs *)args_void;
 
+        /* Create control fifo. */
         if (unlink(CONTROL_FIFO_PATH) && errno != ENOENT)
                 EPRINTF("unlink");
         if (mkfifo(CONTROL_FIFO_PATH, 0666))
@@ -36,35 +37,41 @@ control(void *args_void)
 
         printf("Hello World! I am the Controller!\n");
 
+        /* Send message to main process. */
         msgbuf = (MsgBuf){1};
         if (msgsnd(args->msgid, &msgbuf, 0, IPC_NOWAIT))
                 EPRINTF("msgsnd");
 
+        /* Prepare parameters. */
         scanning = true;
         sprintf(format, "%%%ds", COMMAND_MAX_LENGTH - 1);
         control_fifo_fd_write = open(CONTROL_FIFO_PATH, O_WRONLY);
         if (control_fifo_fd_write < 0)
                 EPRINTF("open");
+
         while (scanning) {
                 scanf(format, command);
+                /* Stop server. */
                 if (!strcmp(command, COMMANDS[0])) {
                         char *buf;
                         ssize_t write_size;
 
-                        buf = malloc(FIFO_ATOMIC_BLOCK_SIZE * sizeof(char));
-                        if (buf == NULL)
+                        if ((buf = malloc(FIFO_ATOMIC_BLOCK_SIZE)) == NULL)
                                 EPRINTF("malloc");
-                        memset(buf, '\0', FIFO_ATOMIC_BLOCK_SIZE * sizeof(char));
+                        memset(buf, '\0', FIFO_ATOMIC_BLOCK_SIZE);
                         strcpy(buf, COMMANDS[0]);
                         write_size = write(control_fifo_fd_write, buf, FIFO_ATOMIC_BLOCK_SIZE);
                         if (write_size < 0)
                                 EPRINTF("write");
                         free(buf);
                         scanning = false;
-                } else if (!strcmp(command, COMMANDS[1])) {
+                }
+                /* Print info. */
+                else if (!strcmp(command, COMMANDS[1])) {
                         printf("Available commands:\n");
                         for (int i = 0; i < sizeof(COMMANDS) / sizeof(char *); ++i)
                                 printf("\t%s\n", COMMANDS[i]);
+                /* Print error. */
                 } else {
                         printf("Unkown command '%s'.\n", command);
                         printf("Type '%s' to get help.\n", COMMANDS[1]);

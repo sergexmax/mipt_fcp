@@ -4,13 +4,12 @@
 #define COMMAND_MAX_LENGTH 16
 
 #define CONTROL_FIFO_PATH "./server/tmp/control.fifo"
-#define COMMUNICATION_FIFO_PATH "./tmp/communication.fifo"
 
-#define EPOLL_NEVENTS_MAX 2 /* The max number of epoll events. */
+#define EPOLL_NEVENTS_MAX 2 /* Max number of epoll events. */
 
 static const char * const COMMANDS[] = {"stop", "info"};
 
-/* The message buffer. */
+/* Message buffer. */
 typedef struct {
         long mtype;
 } MsgBuf;
