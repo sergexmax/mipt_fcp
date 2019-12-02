@@ -1,6 +1,9 @@
 # Project specific
 bin/*
 vgcore.*
+test.sh
+diff.sh
+data
 
 # Prerequisites
 *.d

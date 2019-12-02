@@ -47,8 +47,6 @@ main(int argc, char *argv[], char *envp[])
         if (mkfifo(client_fifo_path, 0666))
                 EPRINTF("mkfifo");
 
-        printf("Hello World! I am Client!\n");
-
         send_request(request);
 
         get_file(client_fifo_path);
@@ -93,12 +91,12 @@ get_file(char *client_fifo_path)
         client_fifo_fd_read = open(client_fifo_path, O_RDONLY);
         if ((buf = malloc(FIFO_ATOMIC_BLOCK_SIZE)) == NULL)
                 EPRINTF("malloc");
-        while ((read_size = read(client_fifo_fd_read, buf, FIFO_ATOMIC_BLOCK_SIZE)) > 0) {
+        while ((read_size = read(client_fifo_fd_read, buf, FIFO_ATOMIC_BLOCK_SIZE)) != 0) {
+                if (read_size < 0)
+                        EPRINTF("read");
                 if (write(1, buf, read_size) != read_size)
                         EPRINTF("write");
         }
-        if (read_size < 0)
-                EPRINTF("read");
 
         free(buf);
         if (close(client_fifo_fd_read))

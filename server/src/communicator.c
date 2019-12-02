@@ -33,7 +33,7 @@ communicate(void *args_void)
         shared_memory = args->shared_memory;
         epoll_args = shared_memory->epoll_args;
 
-        printf("Hello World! I am the %d thread!\n", args->thread_id);
+        // printf("Hello World! I am the %d thread!\n", args->thread_id);
 
         while(shared_memory->running) {
                 int epoll_nevents; /* Number of epoll events. */
@@ -62,7 +62,7 @@ communicate(void *args_void)
                         pthread_mutex_unlock(shared_memory->mutex);
         }
 
-        printf("Goodbye World! I am the %dth thread!\n", args->thread_id);
+        // printf("Goodbye World! I am the %dth thread!\n", args->thread_id);
 }
 
 /* Follow control command. */

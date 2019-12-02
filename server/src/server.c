@@ -100,7 +100,7 @@ main(int argc, char *argv[], char *envp[])
                         EPRINTF("pthread_create");
         }
 
-        printf("Hello World. I am the Server!\n");
+        // printf("Hello World. I am the Server!\n");
 
         /* Exit. */
         for (int i = 0; i < nthreads; ++i) {
@@ -124,7 +124,7 @@ main(int argc, char *argv[], char *envp[])
         if (msgctl(msgid, IPC_RMID, NULL))
                 EPRINTF("msgctl");
 
-        printf("Goodbye World. I am the Server!\n");
+        // printf("Goodbye World. I am the Server!\n");
 
         exit(EXIT_SUCCESS);
 }

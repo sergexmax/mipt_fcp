@@ -36,7 +36,7 @@ control(void *args_void)
         if (mkfifo(CONTROL_FIFO_PATH, 0666))
                 EPRINTF("mkfifo");
 
-        printf("Hello World! I am the Controller!\n");
+        // printf("Hello World! I am the Controller!\n");
 
         /* Send message to main process. */
         msgbuf = (MsgBuf){CONTROLLER_TO_MAIN_MTYPE};
@@ -87,5 +87,5 @@ control(void *args_void)
         if (unlink(CONTROL_FIFO_PATH))
                 EPRINTF("unlink");
 
-        printf("Goodbye World! I am the Controller!\n");
+        // printf("Goodbye World! I am the Controller!\n");
 }
