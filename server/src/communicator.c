@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +16,8 @@
 
 void
 futfill_request(CommunicationArgs *args); /* Futfill client request. */
+bool
+send_report(int client_fifo_fd_read, const char report[]); /* Report to client. */
 void
 copy_file(char *client_fifo_path, char *file_path); /* Copy file to client. */
 void
@@ -104,6 +107,26 @@ follow_command(SharedMemory *shared_memory)
         free(buf);
 }
 
+/* Report to client. */
+bool
+send_report(int client_fifo_fd_read, const char report[])
+{
+        char *buf;
+
+        if ((buf = malloc(FIFO_ATOMIC_BLOCK_SIZE)) == NULL)
+                EPRINTF("malloc");
+        memset(buf, '\0', FIFO_ATOMIC_BLOCK_SIZE);
+        strcpy(buf, report);
+        if (write(client_fifo_fd_read, buf, FIFO_ATOMIC_BLOCK_SIZE) != FIFO_ATOMIC_BLOCK_SIZE) {
+                fprintf(stderr, "write(): %s\n", strerror(errno));
+                free(buf);
+                return false;
+        }
+
+        free(buf);
+        return true;
+}
+
 /* Copy file to client. */
 void
 copy_file(char *client_fifo_path, char *file_path)
@@ -123,19 +146,25 @@ copy_file(char *client_fifo_path, char *file_path)
         }
         if ((file_fd_read = open(file_path, O_RDONLY | O_NONBLOCK)) < 0) {
                 if (errno == ENOENT) {
-                        fprintf(stderr, "open(%s): %s\n", file_path, strerror(errno));
+                        fprintf(stderr, "write(): %s\n", strerror(errno));
+                        if (!send_report(client_fifo_fd_write, REPORTS[0]))
+                                return;
                         return;
                 } else {
                         EPRINTF("open");
                 }
         }
+        if (!send_report(client_fifo_fd_write, REPORTS[1]))
+                return;
         if ((buf = malloc(FIFO_ATOMIC_BLOCK_SIZE)) == NULL)
                 EPRINTF("malloc");
         while ((read_size = read(file_fd_read, buf, FIFO_ATOMIC_BLOCK_SIZE)) != 0) {
                 if (read_size < 0)
                         EPRINTF("read");
-                if (write(client_fifo_fd_write, buf, read_size) != read_size)
-                        EPRINTF("write");
+                if (write(client_fifo_fd_write, buf, read_size) != read_size) {
+                        fprintf(stderr, "write(): %s\n", strerror(errno));
+                        return;
+                }
         }
 
         free(buf);

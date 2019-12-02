@@ -1,6 +1,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,12 +12,15 @@
 /* Error codes. */
 enum {
         WRONG_USAGE = -2,
+        FILE_NOT_FOUND = -3,
 };
 
 static const size_t REQUEST_MAX_LENGTH = PID_MAX_LENGTH + 1 + FILENAME_MAX_LENGTH + 1;
 
 void
 send_request(char *request); /* Send request to server. */
+bool
+get_report(int client_fifo_fd_read); /* Get report from server. */
 void
 get_file(char *client_fifo_path); /* Get file from server. */
 
@@ -80,6 +84,25 @@ send_request(char *request)
                 EPRINTF("close");
 }
 
+/* Get report from server. */
+bool
+get_report(int client_fifo_fd_read)
+{
+        char *buf;
+
+        if ((buf = malloc(FIFO_ATOMIC_BLOCK_SIZE)) == NULL)
+                EPRINTF("malloc");
+        if (read(client_fifo_fd_read, buf, FIFO_ATOMIC_BLOCK_SIZE) != FIFO_ATOMIC_BLOCK_SIZE)
+                EPRINTF("read");
+        if (!strcmp(buf, REPORTS[0])) {
+                fprintf(stderr, "File is not found.\n");
+                free(buf);
+                return false;
+        }
+        free(buf);
+        return true;
+}
+
 /* Get file from server. */
 void
 get_file(char *client_fifo_path)
@@ -89,6 +112,17 @@ get_file(char *client_fifo_path)
         ssize_t read_size;
 
         client_fifo_fd_read = open(client_fifo_path, O_RDONLY);
+
+        /* Check for file is found. */
+        if (!get_report(client_fifo_fd_read)) {
+                if (close(client_fifo_fd_read))
+                        EPRINTF("close");
+                if (unlink(client_fifo_path))
+                        EPRINTF("unlink");
+                exit(FILE_NOT_FOUND);
+        }
+
+        /* Get file. */
         if ((buf = malloc(FIFO_ATOMIC_BLOCK_SIZE)) == NULL)
                 EPRINTF("malloc");
         while ((read_size = read(client_fifo_fd_read, buf, FIFO_ATOMIC_BLOCK_SIZE)) != 0) {
