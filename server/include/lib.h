@@ -9,9 +9,4 @@
 
 static const char * const COMMANDS[] = {"stop", "info"};
 
-/* Message buffer. */
-typedef struct {
-        long mtype;
-} MsgBuf;
-
 #endif /* _MIPT_FCP_SERVER_LIB_H */

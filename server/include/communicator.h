@@ -28,7 +28,7 @@ typedef struct {
 } CommunicationArgs;
 
 /* Communication thread function. */
-void *
+void
 communicate(void *args_void);
 
 #endif /* _MIPT_FCP_SERVER_COMMUNICATOR_H */

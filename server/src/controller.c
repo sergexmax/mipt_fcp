@@ -16,8 +16,9 @@
 
 static const int FORMAT_MAX_LENGTH = COMMAND_MAX_LENGTH + 2; /* Length of decimal record does not exceed
                                                               * number itself. */
+static const int NCOMMANDS = sizeof(COMMANDS) / sizeof(char *); /* Number of commands. */
 
-void *
+void
 control(void *args_void)
 {
         ControlArgs *args;
@@ -38,11 +39,11 @@ control(void *args_void)
         printf("Hello World! I am the Controller!\n");
 
         /* Send message to main process. */
-        msgbuf = (MsgBuf){1};
+        msgbuf = (MsgBuf){CONTROLLER_TO_MAIN_MTYPE};
         if (msgsnd(args->msgid, &msgbuf, 0, IPC_NOWAIT))
                 EPRINTF("msgsnd");
 
-        /* Prepare parameters. */
+        /* Prepare variables. */
         scanning = true;
         sprintf(format, "%%%ds", COMMAND_MAX_LENGTH - 1);
         control_fifo_fd_write = open(CONTROL_FIFO_PATH, O_WRONLY);
@@ -51,6 +52,7 @@ control(void *args_void)
 
         while (scanning) {
                 scanf(format, command);
+
                 /* Stop server. */
                 if (!strcmp(command, COMMANDS[0])) {
                         char *buf;
@@ -61,15 +63,17 @@ control(void *args_void)
                         memset(buf, '\0', FIFO_ATOMIC_BLOCK_SIZE);
                         strcpy(buf, COMMANDS[0]);
                         write_size = write(control_fifo_fd_write, buf, FIFO_ATOMIC_BLOCK_SIZE);
-                        if (write_size < 0)
+                        if (write_size != FIFO_ATOMIC_BLOCK_SIZE)
                                 EPRINTF("write");
+
                         free(buf);
+
                         scanning = false;
                 }
                 /* Print info. */
                 else if (!strcmp(command, COMMANDS[1])) {
                         printf("Available commands:\n");
-                        for (int i = 0; i < sizeof(COMMANDS) / sizeof(char *); ++i)
+                        for (int i = 0; i < NCOMMANDS; ++i)
                                 printf("\t%s\n", COMMANDS[i]);
                 /* Print error. */
                 } else {
@@ -84,6 +88,4 @@ control(void *args_void)
                 EPRINTF("unlink");
 
         printf("Goodbye World! I am the Controller!\n");
-
-        return NULL;
 }

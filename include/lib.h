@@ -23,6 +23,10 @@
 #define COMMUNICATION_FIFO_PATH "./tmp/communication.fifo"
 #define CLIENT_FIFO_PREPATH "./tmp/"
 
-static const size_t FIFO_ATOMIC_BLOCK_SIZE = 1024 * sizeof(char);
+static const int FIFO_ATOMIC_BLOCK_SIZE = 4096 / sizeof(char);
+
+#define PID_MAX_LENGTH 16
+#define FILENAME_MAX_LENGTH 32
+#define PATHNAME_MAX_LENGTH 128
 
 #endif /* _MIPT_FCP_LIB_H */
