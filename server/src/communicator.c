@@ -33,6 +33,8 @@ communicate(void *args_void)
         shared_memory = args->shared_memory;
         epoll_args = shared_memory->epoll_args;
 
+        shared_memory->statuses[args->thread_id] = STATUS_IDLE;
+
         // printf("Hello World! I am the %d thread!\n", args->thread_id);
 
         while(shared_memory->running) {
@@ -42,6 +44,8 @@ communicate(void *args_void)
 
                 /* Wait for control command or client request. */
                 epoll_nevents = epoll_wait(epoll_args->fd, epoll_args->events, EPOLL_NEVENTS_MAX, epoll_args->timeout);
+
+                shared_memory->statuses[args->thread_id] = STATUS_BUSY;
 
                 /* Follow control command. */
                 for (int i = 0; i < epoll_nevents; ++i) {
@@ -60,7 +64,11 @@ communicate(void *args_void)
                 /* Check if server was stopped (epoll timeout was set to 0). */
                 if (epoll_nevents == 0)
                         pthread_mutex_unlock(shared_memory->mutex);
+
+                shared_memory->statuses[args->thread_id] = STATUS_IDLE;
         }
+
+        shared_memory->statuses[args->thread_id] = STATUS_SHUTTED_DOWN;
 
         // printf("Goodbye World! I am the %dth thread!\n", args->thread_id);
 }

@@ -19,6 +19,7 @@ typedef struct {
         EpollArgs *epoll_args;
         bool running;
         pthread_mutex_t *mutex;
+        int *statuses;
 } SharedMemory;
 
 /* Structure of communication thread function arguments. */

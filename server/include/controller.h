@@ -11,6 +11,8 @@ typedef struct {
 /* Structure of control thread function arguments. */
 typedef struct {
         int msgid;
+        int nthreads;
+        int *statuses;
 } ControlArgs;
 
 /* Control thread function. */

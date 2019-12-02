@@ -7,6 +7,15 @@
 
 #define EPOLL_NEVENTS_MAX 2 /* Max number of epoll events. */
 
-static const char * const COMMANDS[] = {"stop", "info"};
+/* Statuses of threads. */
+enum {
+    STATUS_NOT_STARTED = 0,
+    STATUS_IDLE,
+    STATUS_BUSY,
+    STATUS_SHUTTED_DOWN
+};
+
+static const char * const STATUSES[] = {"Not started up", "Idle", "Busy", "Shutted down"};
+static const char * const COMMANDS[] = {"stop", "info", "status"};
 
 #endif /* _MIPT_FCP_SERVER_LIB_H */

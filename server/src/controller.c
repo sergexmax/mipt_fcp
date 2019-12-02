@@ -75,6 +75,10 @@ control(void *args_void)
                         printf("Available commands:\n");
                         for (int i = 0; i < NCOMMANDS; ++i)
                                 printf("\t%s\n", COMMANDS[i]);
+                /* Print statuses. */
+                } else if (!strcmp(command, COMMANDS[2])){
+                        for (int i = 0; i < args->nthreads; ++i)
+                                printf("the %dth thread: %s\n", i + 1, STATUSES[args->statuses[i + 1]]);
                 /* Print error. */
                 } else {
                         printf("Unkown command '%s'.\n", command);

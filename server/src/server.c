@@ -22,6 +22,7 @@ main(int argc, char *argv[], char *envp[])
 {
         int msgid;
         MsgBuf msgbuf;
+        int statuses[NTHREADS_MAX];
         ControlArgs control_args;
         pthread_t controller;
         int control_fifo_fd_read;
@@ -42,8 +43,11 @@ main(int argc, char *argv[], char *envp[])
         if ((msgid = msgget(IPC_PRIVATE, IPC_CREAT | 0666)) < 0)
                 EPRINTF("msgget");
 
+        /* Init statuses. */
+        memset(statuses, STATUS_NOT_STARTED, NTHREADS_MAX * sizeof(*statuses));
+
         /* Launch control process. */
-        control_args = (ControlArgs){msgid};
+        control_args = (ControlArgs){msgid, nthreads, statuses};
         if (pthread_create(&controller, NULL, (void *)&control, (void *)&control_args))
                 EPRINTF("pthread_create");
 
@@ -92,7 +96,8 @@ main(int argc, char *argv[], char *envp[])
                                        communication_fifo_fd_read,
                                        &epoll_args,
                                        true, /* Running flag. */
-                                       &mutex};
+                                       &mutex,
+                                       statuses};
         for (int i = 0; i < nthreads; ++i) {
                 communication_args[i] = (CommunicationArgs){i + 1, /* Thread id. */
                                                             &shared_memory};
